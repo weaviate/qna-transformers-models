@@ -45,7 +45,12 @@ class Qna:
         print(answer_end_scores)
 
         answer_start = torch.argmax(answer_start_scores)
+        start_score = torch.max(answer_start_scores)
         answer_end = torch.argmax(answer_end_scores) + 1
+        end_score = torch.max(answer_end_scores)
+
+        score = (start_score + end_score) / 2
+        print("score is {}".format(score))
         ids = input_ids[answer_start:answer_end]
 
         return self.tokenizer.convert_tokens_to_string(
