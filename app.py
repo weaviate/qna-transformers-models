@@ -28,12 +28,12 @@ def live_and_ready(response: Response):
 @app.post("/answers/")
 async def read_item(item: AnswersInput, response: Response):
     try:
-        answer = await qna.do(item)
+        answer, certainty = await qna.do(item)
         return {
                     "text": item.text,
                     "question": item.question,
                     "answer": answer,
-                    "score": "TODO",
+                    "certainty": certainty,
                 }
     except Exception as e:
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
