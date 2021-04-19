@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Response, status
 from qna import Qna, AnswersInput
+from meta import Meta
 import os
 
 app = FastAPI()
@@ -17,6 +18,7 @@ else:
     print("[INFO] running on CPU")
 
 qna = Qna('./models/model', cuda_support, cuda_core)
+meta_config = Meta('./models/model')
 
 
 @app.get("/.well-known/live", response_class=Response)
@@ -24,6 +26,9 @@ qna = Qna('./models/model', cuda_support, cuda_core)
 def live_and_ready(response: Response):
     response.status_code = status.HTTP_204_NO_CONTENT
 
+@app.get("/meta")
+def meta():
+    return meta_config.get()
 
 @app.post("/answers/")
 async def read_item(item: AnswersInput, response: Response):

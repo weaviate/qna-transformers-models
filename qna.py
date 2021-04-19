@@ -68,6 +68,11 @@ class Qna:
         inputs_text = self.tokenizer(text + ' [CLS]', add_special_tokens=False, 
                 return_tensors="pt")
 
+        if self.cuda:
+            inputs_question.to(self.cuda_core)
+            inputs_text.to(self.cuda_core)
+
+
         total_length = len(inputs_question['input_ids'][0]) + len(inputs_text['input_ids'][0])
 
         def windowSlice(arr, start, stop, block, overlap, arr_to_cut, result=[]):
@@ -95,7 +100,6 @@ class Qna:
 
         return result
 
-    # TODO: what do we need to do to support CUDA?
     async def do(self, input: AnswersInput):
         question = input.question
         text = input.text
