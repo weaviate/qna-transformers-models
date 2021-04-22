@@ -28,11 +28,6 @@ jobs:
       stage: buildanddeploy
 
     - env:
-        MODEL_NAME: sshleifer/tiny-distilbert-base-cased-distilled-squad
-        MODEL_TAG_NAME: sshleifer-tiny-distilbert-base-cased-distilled-squad
-      stage: buildanddeploy
-
-    - env:
         MODEL_NAME: deepset/bert-large-uncased-whole-word-masking-squad2
         MODEL_TAG_NAME: deepset-bert-large-uncased-whole-word-masking-squad2
       stage: buildanddeploy

@@ -50,10 +50,12 @@ class Qna:
 
         score = (start_score + end_score) / 2
         ids = input_ids[answer_start:answer_end]
-        certainty = float(score) / 10
+        answer = self.tokenizer.convert_tokens_to_string(self.tokenizer.convert_ids_to_tokens(ids))
+        certainty = 0.0
+        if self.isGoodAnswer(answer):
+            certainty = float(score) / 10
 
-        return self.tokenizer.convert_tokens_to_string(
-                self.tokenizer.convert_ids_to_tokens(ids)), certainty
+        return answer, certainty
 
     def getInputsText(self, inputs_text, window_start, window_end):
         new_inputs_text={
@@ -103,6 +105,9 @@ class Qna:
 
         return result
 
+    def isGoodAnswer(self, answer):
+        return answer != None and len(answer) > 0 and not (answer.find("[CLS]") != -1 or answer.find("[SEP]") != -1)
+
     async def do(self, input: AnswersInput):
         question = input.question
         text = input.text
@@ -123,7 +128,7 @@ class Qna:
 
         answer = response[0]
         certainty = response[1]
-        if len(answer) > 0 and (answer.find("[CLS]") != -1 or answer.find("[SEP]") != -1):
+        if not self.isGoodAnswer(answer):
             return None, None
 
         return answer, certainty
