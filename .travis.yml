@@ -11,7 +11,36 @@ jobs:
   include:
     # always run test, etc. for this model
     - env:
+        MODEL_NAME: distilbert-base-uncased-distilled-squad
+      stage: buildanddeploy
+
+    # to prevent spamming the pipeline, only include most models if there is a tag
+    - env:
         MODEL_NAME: bert-large-uncased-whole-word-masking-finetuned-squad
+      if: tag IS present
+      stage: buildanddeploy
+
+    - env:
+        MODEL_NAME: distilbert-base-cased-distilled-squad
+      if: tag IS present
+      stage: buildanddeploy
+
+    - env:
+        MODEL_NAME: deepset/roberta-base-squad2
+        MODEL_TAG_NAME: deepset-roberta-base-squad2
+      if: tag IS present
+      stage: buildanddeploy
+
+    - env:
+        MODEL_NAME: sshleifer/tiny-distilbert-base-cased-distilled-squad
+        MODEL_TAG_NAME: sshleifer-tiny-distilbert-base-cased-distilled-squad
+      if: tag IS present
+      stage: buildanddeploy
+
+    - env:
+        MODEL_NAME: deepset/bert-large-uncased-whole-word-masking-squad2
+        MODEL_TAG_NAME: deepset-bert-large-uncased-whole-word-masking-squad2
+      if: tag IS present
       stage: buildanddeploy
 
     - name: Build the base for custom images
