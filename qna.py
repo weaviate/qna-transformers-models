@@ -32,9 +32,11 @@ class Qna:
 
         inputs = {
             'input_ids': torch.cat((inputs_question['input_ids'], inputs_text['input_ids']), 1),
-            'token_type_ids': torch.cat((inputs_question['token_type_ids'], inputs_text['token_type_ids']), 1),
             'attention_mask': torch.cat((inputs_question['attention_mask'], inputs_text['attention_mask']), 1),
         }
+
+        if 'token_type_ids' in inputs_text:
+            inputs['token_type_ids'] = torch.cat((inputs_question['token_type_ids'], inputs_text['token_type_ids']), 1)
 
         outputs = self.model(**inputs)
 
@@ -56,9 +58,10 @@ class Qna:
     def getInputsText(self, inputs_text, window_start, window_end):
         new_inputs_text={
                 'input_ids': torch.tensor([inputs_text['input_ids'][0][window_start:window_end].tolist() + [101]]),
-                'token_type_ids': torch.tensor([inputs_text['token_type_ids'][0][window_start:window_end].tolist() + [0]]),
                 'attention_mask': torch.tensor([inputs_text['attention_mask'][0][window_start:window_end].tolist() + [1]]),
         }
+        if 'token_type_ids' in inputs_text:
+            new_inputs_text['token_type_ids'] = torch.tensor([inputs_text['token_type_ids'][0][window_start:window_end].tolist() + [0]])
         return new_inputs_text
 
     def getTokenizedInputs(self, question, text):
