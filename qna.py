@@ -1,4 +1,5 @@
 from transformers import AutoModelForQuestionAnswering, AutoTokenizer
+from transformers.tokenization_utils_base import BatchEncoding
 from pydantic import BaseModel
 from typing import Optional
 import torch
@@ -30,10 +31,10 @@ class Qna:
 
         input_ids = input_ids_question + input_ids_text
 
-        inputs = {
+        inputs = BatchEncoding({
             'input_ids': torch.cat((inputs_question['input_ids'], inputs_text['input_ids']), 1),
             'attention_mask': torch.cat((inputs_question['attention_mask'], inputs_text['attention_mask']), 1),
-        }
+        })
 
         if 'token_type_ids' in inputs_text:
             inputs['token_type_ids'] = torch.cat((inputs_question['token_type_ids'], inputs_text['token_type_ids']), 1)
@@ -58,10 +59,10 @@ class Qna:
         return answer, certainty
 
     def getInputsText(self, inputs_text, window_start, window_end):
-        new_inputs_text={
+        new_inputs_text=BatchEncoding({
                 'input_ids': torch.tensor([inputs_text['input_ids'][0][window_start:window_end].tolist() + [101]]),
                 'attention_mask': torch.tensor([inputs_text['attention_mask'][0][window_start:window_end].tolist() + [1]]),
-        }
+        })
         if 'token_type_ids' in inputs_text:
             new_inputs_text['token_type_ids'] = torch.tensor([inputs_text['token_type_ids'][0][window_start:window_end].tolist() + [0]])
         return new_inputs_text
@@ -73,9 +74,6 @@ class Qna:
         inputs_text = self.tokenizer(text + ' [CLS]', add_special_tokens=False, 
                 return_tensors="pt")
 
-        if self.cuda:
-            inputs_question.to(self.cuda_core)
-            inputs_text.to(self.cuda_core)
 
 
         total_length = len(inputs_question['input_ids'][0]) + len(inputs_text['input_ids'][0])
@@ -101,6 +99,9 @@ class Qna:
 
         result = []
         for window_input_text in windowed_input_texts:
+            if self.cuda:
+                inputs_question.to(self.cuda_core)
+                window_input_text.to(self.cuda_core)
             result.append((inputs_question, window_input_text))
 
         return result
