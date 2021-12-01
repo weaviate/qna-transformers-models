@@ -42,4 +42,5 @@ async def read_item(item: AnswersInput, response: Response):
                 }
     except Exception as e:
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        print("[ERROR] " + str(e))
         return {"error": str(e)}
