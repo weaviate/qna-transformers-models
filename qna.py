@@ -31,12 +31,18 @@ class Qna:
 
         input_ids = input_ids_question + input_ids_text
 
+
         inputs = BatchEncoding({
             'input_ids': torch.cat((inputs_question['input_ids'], inputs_text['input_ids']), 1),
             'attention_mask': torch.cat((inputs_question['attention_mask'], inputs_text['attention_mask']), 1),
         })
 
         if 'token_type_ids' in inputs_text:
+            # increase token_type_ids of the second part as that is what would
+            # have happened naturally if they had been tokenized in one go
+            inputs_text['token_type_ids'] = torch.add(inputs_text['token_type_ids'], 1)
+
+            # and splice them together
             inputs['token_type_ids'] = torch.cat((inputs_question['token_type_ids'], inputs_text['token_type_ids']), 1)
 
         outputs = self.model(**inputs)
@@ -71,7 +77,7 @@ class Qna:
         inputs_question = self.tokenizer('[CLS] ' + question + ' [SEP] ', add_special_tokens=False, 
                 return_tensors="pt")
 
-        inputs_text = self.tokenizer(text + ' [CLS]', add_special_tokens=False, 
+        inputs_text = self.tokenizer(text + ' [SEP]', add_special_tokens=False, 
                 return_tensors="pt")
 
 
