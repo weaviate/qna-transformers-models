@@ -11,6 +11,12 @@ jobs:
   include:
     # always run test, etc. for this model
     - env:
+        MODEL_NAME: deepset/xlm-roberta-large-squad2
+        MODEL_TAG_NAME: deepset-xlm-roberta-large-squad2
+        SKIP_TEST: "true"
+      stage: buildanddeploy
+    
+    - env:
         MODEL_NAME: distilbert-base-uncased-distilled-squad
       stage: buildanddeploy
 
@@ -37,10 +43,14 @@ jobs:
       stage: postbuild
 
 script:
-
 - cicd/build.sh || travis_terminate 1
 
-- cicd/test.sh || travis_terminate 1
+- |-
+  if [[ -z "$SKIP_TEST" ]]; then
+    cicd/test.sh || travis_terminate 1
+  else
+    echo "Skipping tests for this model"
+  fi
 
 - |-
   # Push docker image
