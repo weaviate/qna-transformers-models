@@ -11,6 +11,11 @@ jobs:
   include:
     # always run test, etc. for this model
     - env:
+        MODEL_NAME: deepset/xlm-roberta-large-squad2
+        MODEL_TAG_NAME: deepset-xlm-roberta-large-squad2
+      stage: buildanddeploy
+    
+    - env:
         MODEL_NAME: distilbert-base-uncased-distilled-squad
       stage: buildanddeploy
 
