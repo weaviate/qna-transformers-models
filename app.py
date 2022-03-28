@@ -56,7 +56,7 @@ async def read_item(item: AnswersInput, response: Response):
         }
     except Exception as e:
         logger.exception(
-            'Something went wrong while vectorizing data.'
+            f"Something went wrong while vectorizing data for question: {item.question} text: {item.text}"
         )
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         return {"error": str(e)}
