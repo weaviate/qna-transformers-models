@@ -80,10 +80,32 @@ class Qna:
         inputs_text = self.tokenizer(text + ' [SEP]', add_special_tokens=False, 
                 return_tensors="pt")
 
+        windowed_input_texts = []
+        input_texts_arr = self.performWindowSliceOnInput(inputs_text)
+        for input_text in input_texts_arr:
+            total_length = len(inputs_question['input_ids'][0]) + len(input_text['input_ids'][0])
+            res = self.performWindowSliceToFindAnswer(inputs_question, input_text, total_length)
+            windowed_input_texts.extend(res)
 
+        result = []
+        for window_input_text in windowed_input_texts:
+            if self.cuda:
+                inputs_question.to(self.cuda_core)
+                window_input_text.to(self.cuda_core)
+            result.append((inputs_question, window_input_text))
 
-        total_length = len(inputs_question['input_ids'][0]) + len(inputs_text['input_ids'][0])
+        return result
 
+    def performWindowSliceOnInput(self, inputs_text):
+        # this method cuts very long tests in order to prevent maximum recursion depth exceeded error
+        # cuts the input without overlap and without taking into account questions length
+        # the cutoff is set to 220k elements
+        return self.performWindowSlice(None, inputs_text, len(inputs_text['input_ids'][0]), 220000, False)
+
+    def performWindowSliceToFindAnswer(self, inputs_question, inputs_text, total_length):
+        return self.performWindowSlice(inputs_question, inputs_text, total_length, 512, True)
+
+    def performWindowSlice(self, inputs_question, inputs_text, total_length, treshold, withOverlap):
         def windowSlice(arr, start, stop, block, overlap, arr_to_cut, result=[]):
             if start == len(arr):
                 return
@@ -94,23 +116,19 @@ class Qna:
                 result.append(self.getInputsText(arr_to_cut, start, stop))
             windowSlice(arr, stop-overlap, stop-overlap+block, block, overlap, arr_to_cut, result)
 
-        treshold = 512
         windowed_input_texts=[]
         if total_length > treshold:
-            block = treshold - len(inputs_question['input_ids'][0]) - 1
-            overlap = int(int(block) / 2)
+            block = treshold - 1
+            if inputs_question is not None:
+                block = block - len(inputs_question['input_ids'][0]) # take into account question length also
+            overlap = 0
+            if withOverlap is True:
+                overlap = int(int(block) / 4) # 25% overlap set
             windowSlice(inputs_text['input_ids'][0], 0, block, block, overlap, inputs_text, windowed_input_texts)
         else:
             windowed_input_texts.append(inputs_text)
 
-        result = []
-        for window_input_text in windowed_input_texts:
-            if self.cuda:
-                inputs_question.to(self.cuda_core)
-                window_input_text.to(self.cuda_core)
-            result.append((inputs_question, window_input_text))
-
-        return result
+        return windowed_input_texts
 
     def isGoodAnswer(self, answer):
         return answer != None and len(answer) > 0 and not (answer.find("[CLS]") != -1 or answer.find("[SEP]") != -1)
