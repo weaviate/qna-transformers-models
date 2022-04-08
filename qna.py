@@ -106,15 +106,13 @@ class Qna:
         return self.performWindowSlice(inputs_question, inputs_text, total_length, 512, True)
 
     def performWindowSlice(self, inputs_question, inputs_text, total_length, treshold, withOverlap):
-        def windowSlice(arr, start, stop, block, overlap, arr_to_cut, result=[]):
-            if start == len(arr):
-                return
-            if stop > len(arr):
-                result.append(self.getInputsText(arr_to_cut, start, len(arr)))
+        def windowSlice(len_arr, start, block, overlap, arr_to_cut, result=[]):
+            if start + block >= len_arr:
+                result.append(self.getInputsText(arr_to_cut, start, len_arr))
                 return
             else:
-                result.append(self.getInputsText(arr_to_cut, start, stop))
-            windowSlice(arr, stop-overlap, stop-overlap+block, block, overlap, arr_to_cut, result)
+                result.append(self.getInputsText(arr_to_cut, start, start + block))
+            windowSlice(len_arr, start + block-overlap, block, overlap, arr_to_cut, result)
 
         windowed_input_texts=[]
         if total_length > treshold:
@@ -124,7 +122,7 @@ class Qna:
             overlap = 0
             if withOverlap is True:
                 overlap = int(int(block) / 4) # 25% overlap set
-            windowSlice(inputs_text['input_ids'][0], 0, block, block, overlap, inputs_text, windowed_input_texts)
+            windowSlice(len(inputs_text['input_ids'][0]), 0, block, overlap, inputs_text, windowed_input_texts)
         else:
             windowed_input_texts.append(inputs_text)
 
