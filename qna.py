@@ -80,28 +80,9 @@ class Qna:
         inputs_text = self.tokenizer(text + ' [SEP]', add_special_tokens=False, 
                 return_tensors="pt")
 
-
-
-        total_length = len(inputs_question['input_ids'][0]) + len(inputs_text['input_ids'][0])
-
-        def windowSlice(arr, start, stop, block, overlap, arr_to_cut, result=[]):
-            if start == len(arr):
-                return
-            if stop > len(arr):
-                result.append(self.getInputsText(arr_to_cut, start, len(arr)))
-                return
-            else:
-                result.append(self.getInputsText(arr_to_cut, start, stop))
-            windowSlice(arr, stop-overlap, stop-overlap+block, block, overlap, arr_to_cut, result)
-
-        treshold = 512
-        windowed_input_texts=[]
-        if total_length > treshold:
-            block = treshold - len(inputs_question['input_ids'][0]) - 1
-            overlap = int(int(block) / 2)
-            windowSlice(inputs_text['input_ids'][0], 0, block, block, overlap, inputs_text, windowed_input_texts)
-        else:
-            windowed_input_texts.append(inputs_text)
+        question_length = len(inputs_question['input_ids'][0])
+        text_length = len(inputs_text['input_ids'][0])
+        windowed_input_texts = self.performWindowSlice(inputs_text, question_length, text_length)
 
         result = []
         for window_input_text in windowed_input_texts:
@@ -111,6 +92,26 @@ class Qna:
             result.append((inputs_question, window_input_text))
 
         return result
+
+    def performWindowSlice(self, inputs_text, question_length, text_length):
+        treshold = 512
+
+        windowed_input_texts=[]
+        if question_length + text_length > treshold:
+            block = treshold - 1 - question_length
+            overlap = int(block / 4) # 25% overlap set
+
+            start = 0
+            while True:
+                if start + block >= text_length:
+                    windowed_input_texts.append(self.getInputsText(inputs_text, start, text_length))
+                    break
+                windowed_input_texts.append(self.getInputsText(inputs_text, start, start + block))
+                start = start + block - overlap
+        else:
+            windowed_input_texts.append(inputs_text)
+
+        return windowed_input_texts
 
     def isGoodAnswer(self, answer):
         return answer != None and len(answer) > 0 and not (answer.find("[CLS]") != -1 or answer.find("[SEP]") != -1)
