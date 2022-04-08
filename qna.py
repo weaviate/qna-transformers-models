@@ -80,12 +80,9 @@ class Qna:
         inputs_text = self.tokenizer(text + ' [SEP]', add_special_tokens=False, 
                 return_tensors="pt")
 
-        windowed_input_texts = []
-        input_texts_arr = self.performWindowSliceOnInput(inputs_text)
-        for input_text in input_texts_arr:
-            total_length = len(inputs_question['input_ids'][0]) + len(input_text['input_ids'][0])
-            res = self.performWindowSliceToFindAnswer(inputs_question, input_text, total_length)
-            windowed_input_texts.extend(res)
+        question_length = len(inputs_question['input_ids'][0])
+        text_length = len(inputs_text['input_ids'][0])
+        windowed_input_texts = self.performWindowSlice(inputs_text, question_length, text_length)
 
         result = []
         for window_input_text in windowed_input_texts:
@@ -96,33 +93,21 @@ class Qna:
 
         return result
 
-    def performWindowSliceOnInput(self, inputs_text):
-        # this method cuts very long tests in order to prevent maximum recursion depth exceeded error
-        # cuts the input without overlap and without taking into account questions length
-        # the cutoff is set to 220k elements
-        return self.performWindowSlice(None, inputs_text, len(inputs_text['input_ids'][0]), 220000, False)
-
-    def performWindowSliceToFindAnswer(self, inputs_question, inputs_text, total_length):
-        return self.performWindowSlice(inputs_question, inputs_text, total_length, 512, True)
-
-    def performWindowSlice(self, inputs_question, inputs_text, total_length, treshold, withOverlap):
-        def windowSlice(len_arr, start, block, overlap, arr_to_cut, result=[]):
-            if start + block >= len_arr:
-                result.append(self.getInputsText(arr_to_cut, start, len_arr))
-                return
-            else:
-                result.append(self.getInputsText(arr_to_cut, start, start + block))
-            windowSlice(len_arr, start + block-overlap, block, overlap, arr_to_cut, result)
+    def performWindowSlice(self, inputs_text, question_length, text_length):
+        treshold = 512
 
         windowed_input_texts=[]
-        if total_length > treshold:
-            block = treshold - 1
-            if inputs_question is not None:
-                block = block - len(inputs_question['input_ids'][0]) # take into account question length also
-            overlap = 0
-            if withOverlap is True:
-                overlap = int(int(block) / 4) # 25% overlap set
-            windowSlice(len(inputs_text['input_ids'][0]), 0, block, overlap, inputs_text, windowed_input_texts)
+        if question_length + text_length > treshold:
+            block = treshold - 1 - question_length
+            overlap = int(block / 4) # 25% overlap set
+
+            start = 0
+            while True:
+                if start + block >= text_length:
+                    windowed_input_texts.append(self.getInputsText(inputs_text, start, text_length))
+                    break
+                windowed_input_texts.append(self.getInputsText(inputs_text, start, start + block))
+                start = start + block - overlap
         else:
             windowed_input_texts.append(inputs_text)
 
