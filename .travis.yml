@@ -9,13 +9,9 @@ env:
 install: echo skipping default travis install script
 jobs:
   include:
-    # always run test, etc. for this model
-    - env:
-        MODEL_NAME: deepset/xlm-roberta-large-squad2
-        MODEL_TAG_NAME: deepset-xlm-roberta-large-squad2
-        SKIP_TEST: "true"
-      stage: buildanddeploy
-    
+    # We are disabling deepset/xlm-roberta-large-squad2 and deepset/roberta-base-squad2 models
+    # which occurred to perform poor in terms of giving answers
+    # Tests can be skipped for a given a model by adding: SKIP_TEST: "true"
     - env:
         MODEL_NAME: distilbert-base-uncased-distilled-squad
       stage: buildanddeploy
@@ -26,11 +22,6 @@ jobs:
 
     - env:
         MODEL_NAME: distilbert-base-cased-distilled-squad
-      stage: buildanddeploy
-
-    - env:
-        MODEL_NAME: deepset/roberta-base-squad2
-        MODEL_TAG_NAME: deepset-roberta-base-squad2
       stage: buildanddeploy
 
     - env:
