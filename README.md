@@ -1,14 +1,15 @@
 # qna-transformers-models
 The inference container for the qna module
 
-This is a temporary readme. TODO
+## Documentation
+
+Documentation for this module can be found [here](https://weaviate.io/developers/weaviate/current/reader-generator-modules/qna-transformers.html).
 
 ## Build Docker container
 
 ```
 LOCAL_REPO="qna-transformers" MODEL_NAME="bert-large-uncased-whole-word-masking-finetuned-squad" ./cicd/build.sh
 ```
-
 
 ### Local development
 
