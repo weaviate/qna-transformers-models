@@ -1,9 +1,9 @@
-from transformers import AutoModelForQuestionAnswering, AutoTokenizer
+from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
 from transformers.tokenization_utils_base import BatchEncoding
 from pydantic import BaseModel
 from typing import Optional
 import torch
-
+from optimum.onnxruntime import ORTModelForQuestionAnswering
 
 class AnswersInput(BaseModel):
     text: str
@@ -14,14 +14,22 @@ class Qna:
     tokenizer: AutoTokenizer
     cuda: bool
     cuda_core: str
+    onnx_runtime: bool
 
-    def __init__(self, model_path: str, cuda_support: bool, cuda_core: str):
+    def __init__(self, model_path: str, cuda_support: bool, cuda_core: str, onnx_runtime: bool):
         self.cuda = cuda_support
         self.cuda_core = cuda_core
-        self.model = AutoModelForQuestionAnswering.from_pretrained(model_path)
+        self.onnx_runtime = onnx_runtime
+        if self.onnx_runtime:
+            self.model = ORTModelForQuestionAnswering.from_pretrained(model_path, file_name="model_quantized.onnx")
+        else:
+            self.model = AutoModelForQuestionAnswering.from_pretrained(model_path)
+
         if self.cuda:
             self.model.to(self.cuda_core)
-        self.model.eval() # make sure we're in inference mode, not training
+
+        if not self.onnx_runtime:
+            self.model.eval() # make sure we're in inference mode, not training
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_path)
 
@@ -30,7 +38,6 @@ class Qna:
         input_ids_text = inputs_text["input_ids"].tolist()[0]
 
         input_ids = input_ids_question + input_ids_text
-
 
         inputs = BatchEncoding({
             'input_ids': torch.cat((inputs_question['input_ids'], inputs_text['input_ids']), 1),

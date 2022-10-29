@@ -10,6 +10,8 @@ COPY requirements.txt .
 RUN pip3 install -r requirements.txt
 
 ARG MODEL_NAME
+ARG ONNX_RUNTIME
+ARG ONNX_CPU
 COPY download.py .
 RUN ./download.py
 
