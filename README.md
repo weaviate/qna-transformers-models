@@ -26,6 +26,18 @@ Run command:
 MODEL_NAME=bert-large-uncased-whole-word-masking-finetuned-squad ./download.py
 ```
 
+### Downloading model with ONNX runtime
+
+Run command for AVX512_VNNI compatible x86 processors:
+```
+MODEL_NAME=bert-large-uncased-whole-word-masking-finetuned-squad ONNX_RUNTIME=true ONNX_CPU=AVX512_VNNI ./download.py
+```
+
+Run command for ARM64 compatible processors:
+```
+MODEL_NAME=bert-large-uncased-whole-word-masking-finetuned-squad ONNX_RUNTIME=true ONNX_CPU=ARM64 ./download.py
+```
+
 ### Running local server
 
 Run command:

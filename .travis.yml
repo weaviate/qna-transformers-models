@@ -29,6 +29,56 @@ jobs:
         MODEL_TAG_NAME: deepset-bert-large-uncased-whole-word-masking-squad2
       stage: buildanddeploy
 
+    - env:
+        MODEL_NAME: distilbert-base-uncased-distilled-squad
+        ONNX_RUNTIME: true
+        ONNX_CPU: avx512_vnni
+      stage: buildanddeploy
+
+    - env:
+        MODEL_NAME: bert-large-uncased-whole-word-masking-finetuned-squad
+        ONNX_RUNTIME: true
+        ONNX_CPU: avx512_vnni
+      stage: buildanddeploy
+
+    - env:
+        MODEL_NAME: distilbert-base-cased-distilled-squad
+        ONNX_RUNTIME: true
+        ONNX_CPU: avx512_vnni
+      stage: buildanddeploy
+
+    - env:
+        MODEL_NAME: deepset/bert-large-uncased-whole-word-masking-squad2
+        MODEL_TAG_NAME: deepset-bert-large-uncased-whole-word-masking-squad2
+        ONNX_RUNTIME: true
+        ONNX_CPU: avx512_vnni
+      stage: buildanddeploy
+
+    - env:
+        MODEL_NAME: distilbert-base-uncased-distilled-squad
+        ONNX_RUNTIME: true
+        ONNX_CPU: arm64
+      stage: buildanddeploy
+
+    - env:
+        MODEL_NAME: bert-large-uncased-whole-word-masking-finetuned-squad
+        ONNX_RUNTIME: true
+        ONNX_CPU: arm64
+      stage: buildanddeploy
+
+    - env:
+        MODEL_NAME: distilbert-base-cased-distilled-squad
+        ONNX_RUNTIME: true
+        ONNX_CPU: arm64
+      stage: buildanddeploy
+
+    - env:
+        MODEL_NAME: deepset/bert-large-uncased-whole-word-masking-squad2
+        MODEL_TAG_NAME: deepset-bert-large-uncased-whole-word-masking-squad2
+        ONNX_RUNTIME: true
+        ONNX_CPU: arm64
+      stage: buildanddeploy
+
     - name: Build the base for custom images
       script: GIT_BRANCH=$TRAVIS_BRANCH GIT_TAG=$TRAVIS_TAG GIT_PULL_REQUEST=$TRAVIS_PULL_REQUEST cicd/build_custom_base.sh
       stage: postbuild

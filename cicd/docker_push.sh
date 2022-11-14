@@ -18,6 +18,8 @@ model_name=${MODEL_NAME?Variable MODEL_NAME is required}
 original_model_name=$model_name
 docker_username=${DOCKER_USERNAME?Variable DOCKER_USERNAME is required}
 docker_password=${DOCKER_PASSWORD?Variable DOCKER_PASSWORD is required}
+onnx_runtime=${ONNX_RUNTIME:=false}
+onnx_cpu=${ONNX_CPU:=AVX512_VNNI}
 
 function main() {
   init
@@ -52,10 +54,21 @@ function init() {
 function push_main() {
   if [ "$GIT_BRANCH" == "main" ] && [ "$pr" == "false" ]; then
     # The ones that are always pushed
-
+    platform="linux/arm64,linux/amd64"
     tag="$remote_repo:$model_name-$git_hash"
-    docker buildx build --platform=linux/arm64,linux/amd64 \
+    if [ "$onnx_runtime" == "true"]; then
+      tag="$remote_repo:$model_name-onnx-$onnx_cpu-$git_hash"
+      platform="linux/amd64"
+      if [ "$onnx_cpu" == "arm64"] || [ "$onnx_cpu" == "ARM64"]; then
+        platform="linux/arm64"
+      fi
+    fi
+
+    echo "ONNX_RUNTIME: $onnx_runtime ONNX_CPU: $onnx_cpu Platform: $platform Main & Push: $tag"
+    docker buildx build --platform=$platform \
       --build-arg "MODEL_NAME=$original_model_name" \
+      --build-arg "ONNX_RUNTIME=$onnx_runtime" \
+      --build-arg "ONNX_CPU=$onnx_cpu" \
       --push \
       --tag "$tag" .
   fi
@@ -66,10 +79,22 @@ function push_tag() {
     tag_git="$remote_repo:$model_name-$GIT_TAG"
     tag_latest="$remote_repo:$model_name-latest"
     tag="$remote_repo:$model_name"
+    platform="linux/arm64,linux/amd64"
+    if [ "$onnx_runtime" == "true"]; then
+      tag_git="$remote_repo:$model_name-onnx-$onnx_cpu-$GIT_TAG"
+      tag_latest="$remote_repo:$model_name-onnx-$onnx_cpu-latest"
+      tag="$remote_repo:$model_name-onnx-$onnx_cpu"
+      platform="linux/amd64"
+      if [ "$onnx_cpu" == "arm64"] || [ "$onnx_cpu" == "ARM64"]; then
+        platform="linux/arm64"
+      fi
+    fi
 
-    echo "Tag & Push $tag, $tag_latest, $tag_git"
-    docker buildx build --platform=linux/arm64,linux/amd64 \
+    echo "ONNX_RUNTIME: $onnx_runtime ONNX_CPU: $onnx_cpu Platform: $platform Tag & Push: $tag, $tag_latest, $tag_git"
+    docker buildx build --platform=$platform \
       --build-arg "MODEL_NAME=$original_model_name" \
+      --build-arg "ONNX_RUNTIME=$onnx_runtime" \
+      --build-arg "ONNX_CPU=$onnx_cpu" \
       --push \
       --tag "$tag_git" \
       --tag "$tag_latest" \
