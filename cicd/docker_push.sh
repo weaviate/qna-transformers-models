@@ -26,6 +26,8 @@ function main() {
   echo "git branch is $GIT_BRANCH"
   echo "git tag is $GIT_TAG"
   echo "pr is $pr"
+  echo "onnx_runtime is $onnx_runtime"
+  echo "onnx_cpu is $onnx_cpu"
   push_main
   push_tag
 }

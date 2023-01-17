@@ -20,11 +20,55 @@ jobs:
         include:
           - model_name: distilbert-base-uncased-distilled-squad
             model_tag_name: distilbert-base-uncased-distilled-squad
+            onnx_runtime: false
+          - model_name: bert-large-uncased-whole-word-masking-finetuned-squad
+            model_tag_name: bert-large-uncased-whole-word-masking-finetuned-squad
+            onnx_runtime: false
+          - model_name: distilbert-base-cased-distilled-squad
+            model_tag_name: distilbert-base-cased-distilled-squad
+            onnx_runtime: false
+          - model_name: deepset/bert-large-uncased-whole-word-masking-squad2
+            model_tag_name: deepset-bert-large-uncased-whole-word-masking-squad2
+            onnx_runtime: false
+          - model_name: distilbert-base-uncased-distilled-squad
+            model_tag_name: distilbert-base-uncased-distilled-squad
+            onnx_runtime: true
+            onnx_cpu: avx512_vnni
+          - model_name: bert-large-uncased-whole-word-masking-finetuned-squad
+            model_tag_name: bert-large-uncased-whole-word-masking-finetuned-squad
+            onnx_runtime: true
+            onnx_cpu: avx512_vnni
+          - model_name: distilbert-base-cased-distilled-squad
+            model_tag_name: distilbert-base-cased-distilled-squad
+            onnx_runtime: true
+            onnx_cpu: avx512_vnni
+          - model_name: deepset/bert-large-uncased-whole-word-masking-squad2
+            model_tag_name: deepset-bert-large-uncased-whole-word-masking-squad2
+            onnx_runtime: true
+            onnx_cpu: avx512_vnni
+          - model_name: distilbert-base-uncased-distilled-squad
+            model_tag_name: distilbert-base-uncased-distilled-squad
+            onnx_runtime: true
+            onnx_cpu: arm64
+          - model_name: bert-large-uncased-whole-word-masking-finetuned-squad
+            model_tag_name: bert-large-uncased-whole-word-masking-finetuned-squad
+            onnx_runtime: true
+            onnx_cpu: arm64
+          - model_name: distilbert-base-cased-distilled-squad
+            model_tag_name: distilbert-base-cased-distilled-squad
+            onnx_runtime: true
+            onnx_cpu: arm64
+          - model_name: deepset/bert-large-uncased-whole-word-masking-squad2
+            model_tag_name: deepset-bert-large-uncased-whole-word-masking-squad2
+            onnx_runtime: true
+            onnx_cpu: arm64
     env:
       LOCAL_REPO: qna-transformers
       REMOTE_REPO: semitechnologies/qna-transformers
       MODEL_NAME: ${{matrix.model_name}}
       MODEL_TAG_NAME: ${{matrix.model_tag_name}}
+      ONNX_RUNTIME: ${{matrix.onnx_runtime}}
+      ONNX_CPU: ${{matrix.onnx_cpu}}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
