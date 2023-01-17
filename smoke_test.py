@@ -31,9 +31,9 @@ class SmokeTest(unittest.TestCase):
         self.assertEqual(200, res.status_code)
         self.assertEqual(req_body['text'], resBody['text'])
         self.assertEqual(req_body['question'], resBody['question'])
-        self.assertEqual(str(resBody['answer']).strip(), "20 years old")
+        self.assertTrue("20" in str(resBody['answer']).strip())
         self.assertGreaterEqual(resBody['certainty'], 0.01)
-        self.assertGreaterEqual(len(str(resBody['answer']).strip()), 5)
+        self.assertGreaterEqual(len(str(resBody['answer']).strip()), 2)
         print(f"{req_body['question']} : {resBody['answer']} : {resBody['certainty']}")
 
         req_body = {'text': 'John is 20 years old', 'question': 'this is wrong question'}

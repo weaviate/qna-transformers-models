@@ -1,0 +1,118 @@
+name: Main
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - '**'
+    paths-ignore:
+      - README.md
+      - LICENSE
+  pull_request:
+
+jobs:
+  build-image:
+    name: Build image
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - model_name: distilbert-base-uncased-distilled-squad
+            model_tag_name: distilbert-base-uncased-distilled-squad
+            onnx_runtime: false
+          - model_name: bert-large-uncased-whole-word-masking-finetuned-squad
+            model_tag_name: bert-large-uncased-whole-word-masking-finetuned-squad
+            onnx_runtime: false
+          - model_name: distilbert-base-cased-distilled-squad
+            model_tag_name: distilbert-base-cased-distilled-squad
+            onnx_runtime: false
+          - model_name: deepset/bert-large-uncased-whole-word-masking-squad2
+            model_tag_name: deepset-bert-large-uncased-whole-word-masking-squad2
+            onnx_runtime: false
+          - model_name: distilbert-base-uncased-distilled-squad
+            model_tag_name: distilbert-base-uncased-distilled-squad
+            onnx_runtime: true
+            onnx_cpu: avx512_vnni
+          - model_name: bert-large-uncased-whole-word-masking-finetuned-squad
+            model_tag_name: bert-large-uncased-whole-word-masking-finetuned-squad
+            onnx_runtime: true
+            onnx_cpu: avx512_vnni
+          - model_name: distilbert-base-cased-distilled-squad
+            model_tag_name: distilbert-base-cased-distilled-squad
+            onnx_runtime: true
+            onnx_cpu: avx512_vnni
+          - model_name: deepset/bert-large-uncased-whole-word-masking-squad2
+            model_tag_name: deepset-bert-large-uncased-whole-word-masking-squad2
+            onnx_runtime: true
+            onnx_cpu: avx512_vnni
+          - model_name: distilbert-base-uncased-distilled-squad
+            model_tag_name: distilbert-base-uncased-distilled-squad
+            onnx_runtime: true
+            onnx_cpu: arm64
+          - model_name: bert-large-uncased-whole-word-masking-finetuned-squad
+            model_tag_name: bert-large-uncased-whole-word-masking-finetuned-squad
+            onnx_runtime: true
+            onnx_cpu: arm64
+          - model_name: distilbert-base-cased-distilled-squad
+            model_tag_name: distilbert-base-cased-distilled-squad
+            onnx_runtime: true
+            onnx_cpu: arm64
+          - model_name: deepset/bert-large-uncased-whole-word-masking-squad2
+            model_tag_name: deepset-bert-large-uncased-whole-word-masking-squad2
+            onnx_runtime: true
+            onnx_cpu: arm64
+    env:
+      LOCAL_REPO: qna-transformers
+      REMOTE_REPO: semitechnologies/qna-transformers
+      MODEL_NAME: ${{matrix.model_name}}
+      MODEL_TAG_NAME: ${{matrix.model_tag_name}}
+      ONNX_RUNTIME: ${{matrix.onnx_runtime}}
+      ONNX_CPU: ${{matrix.onnx_cpu}}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - name: Login to Docker Hub
+        if: ${{ !github.event.pull_request.head.repo.fork }}
+        uses: docker/login-action@v2
+        with:
+          username: ${{secrets.DOCKER_USERNAME}}
+          password: ${{secrets.DOCKER_PASSWORD}}
+      - name: Build and test
+        run: |
+          cicd/build.sh || exit 1
+          cicd/test.sh || exit 1
+      - name: Deploy
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+        env:
+          DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
+          DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+        run: |
+          export GIT_TAG=${GITHUB_REF##*/}
+          cicd/docker_push.sh || exit 1
+  build-custom-image:
+    name: Build custom image
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    runs-on: ubuntu-latest
+    env:
+      LOCAL_REPO: qna-transformers
+      REMOTE_REPO: semitechnologies/qna-transformers
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{secrets.DOCKER_USERNAME}}
+          password: ${{secrets.DOCKER_PASSWORD}}
+      - name: Deploy
+        env:
+          DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
+          DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+        run: |
+          export GIT_TAG=${GITHUB_REF##*/}
+          cicd/build_custom_base.sh || exit 1
